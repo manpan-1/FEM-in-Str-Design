@@ -95,7 +95,7 @@ end
 Kr=Kg(afg,afg);  %initial tangent stiffness matrix
 
 %displacement increment
-d_inc=-0.5;
+d_inc=-0.05;
 %d(afg,1)=d_inc*P;
 aux=[zeros(17,1); 1 ; zeros(11,1)];
 dd=d_inc*aux;
@@ -105,23 +105,46 @@ dd=d_inc*aux;
 Ka=[Kr,-P;aux',0];
 %lambda
 la=0;
-
-
+max_idx=18;
+% %previous displacement
+% d1=d(afg,1);
+% %current displacement
+% d2=d1;
+%direction vector
+s=1;
 %perform analysis
-%for k=1:1600
-while d(19)<80
-%assemble tangent vector
+step3=0;
+while la < 2.0
+    
+    %assemble tangent vector 
     t=[Kr\P;1];
     %predictor
     %identify maximum displacement: node number and direction
-    [max_num,max_idx] = max(abs(t));
+%     [max_num,max_idx] = max(abs(t(16:end)));
+%     max_idx=max_idx+15;
+    if abs(d(20)) < 60 && max_idx ~= 17  
+        max_idx=18;               
+    elseif d(19) < 93 && step3 == 0
+        max_idx=17;
+        d_inc=0.02;
+    end 
     
-    %k
-    %max_idx
-     
-    %change displacement control to the node with the highest displacement
-    aux=[zeros(max_idx-1,1); 1 ; zeros(length(t)-max_idx-1,1) ];
+    if abs(d(19)) > 93    
+        max_idx=21;
+        d_inc=-0.1;
+        step3=1;
+    end
+    
+    %change displacement control to the node with the highest displacement,
+    aux=[zeros(max_idx-1,1); 1 ; zeros(length(t)-max_idx-1,1) ]; 
+    
     dd=aux*d_inc;
+    %verify direction 
+%     if t'*(d2(max_idx)-d1(max_idx)) < 0
+%         s=-1;
+%     else
+%         s=1;
+%     end
     predictor=dd(max_idx)/t(max_idx)*t;
     %write dlambda and ddisplacement
     dd=predictor(1:end-1);
@@ -132,10 +155,14 @@ while d(19)<80
     la=la+dF;
     %create the big matrix
     
-    Pr(afg,1)=Pr(afg,1)+P;
+    %Pr(afg,1)=Pr(afg,1)+P;
     r=100;
     
+%     if t(max_idx) < 0
     Ka=[Kr,-P;aux',0];
+%     else 
+%       Ka=[Kr,P;aux' 0];  
+%     end
     
     while r>tol
         %assemble
