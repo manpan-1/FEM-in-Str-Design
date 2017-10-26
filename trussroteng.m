@@ -13,12 +13,12 @@ function [q_e, K_e] = trussroteng(coor, disp, E_modulus, A_o)
 % - [A_o] is the initial cross sectional area.
 
 % Dimensions of the element (bounding box on the global csys).
-x21=coor(2, 1) - coor(1, 1);
-y21=coor(2, 2) - coor(1, 2);
+x21=coor(3) - coor(1);
+y21=coor(4) - coor(2);
 
 % Deformations on the global csys (relative displacement of nodes).
-u21=disp(2, 1) - disp(1, 1);
-v21=disp(2, 2) - disp(1, 2);
+u21=disp(3) - disp(1);
+v21=disp(4) - disp(2);
 
 % Initial and final length.
 L_o = sqrt(x21^2 + y21^2);
