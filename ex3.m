@@ -27,9 +27,9 @@ d = zeros(2, 1);
 d1 = zeros(4, 1);
 d2 = zeros(4, 1);
 la = 0;   
-forc = 0;
-dispx = 0;
-dispy = 0;
+forc = zeros(1, steps + 1);
+dispx = zeros(1, steps + 1);
+dispy = zeros(1, steps + 1);
 
 % Element formulation using rotational engineering strain
 [fe1, ke1] = trussroteng(x1, zeros(1, 4), E, Ao);
@@ -47,11 +47,6 @@ dv2 = -0.01;
 
 % Number of steps
 steps = 25;
-
-% Initialise
-forc = zeros(1, steps + 1);
-dispx = zeros(1, steps + 1);
-dispy = zeros(1, steps + 1);
 
 for i = 1:25
   %assemble tangent vector
