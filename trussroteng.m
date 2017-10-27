@@ -1,9 +1,9 @@
 function [q_e, K_e] = trussroteng(coor, disp, E_modulus, A_o)
-%trussroteng function returning thei nternal load vector and stiffness
+% TRUSSROTENG function returning thei nternal load vector and stiffness
 % matrix of a truss element using rotated engineering strain formulation.
 %
 % example:
-% [q_e, K_e] = trussroteng(coor, disp, E_modulus, A_o)
+% [q_e, K_e] = TRUSSROTENG(coor, disp, E_modulus, A_o)
 %
 % where:
 % - [coor] is an array of the form [x_1, y_1; x_2, y_2] with the global 

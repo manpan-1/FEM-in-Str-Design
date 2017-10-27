@@ -1,5 +1,5 @@
 function [x] = steps_NewtRaph(equation, y, tol)
-%steps_NewtRaph Series of Newton-Raphson steps.
+% steps_NewtRaph Series of Newton-Raphson steps.
 % For a given equation y=f(x) and given values y, calculate and return the
 % corresponding values of x, approximated using Newton Raphson iterations.
 %

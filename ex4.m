@@ -1,5 +1,4 @@
 % Exercise 4: Frame solved using corotational elements.
-clear all;
 
 % Initialise variables for the output
 forc = [];
