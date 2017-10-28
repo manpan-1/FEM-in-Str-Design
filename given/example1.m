@@ -37,8 +37,6 @@ keg=ke1(3:4,3:4)+ke2(1:2,1:2);
 dF=0.2;
 
 for i=1:15
-  
-  i  
     
   la=la+dF;
   resid=feg-la*F;
@@ -58,7 +56,7 @@ for i=1:15
      keg=ke1(3:4,3:4)+ke2(1:2,1:2); 
   
      resid=feg-la*F;
-     r=norm(resid)
+     r=norm(resid);
   end  
   
   forc=[forc,la];
