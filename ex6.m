@@ -9,7 +9,7 @@ load = -150000;
 
 % Define step, percentage for the given load.
 % 0<step<1
-dF = 0.03;
+d_step = -1;
 
 %% Structure
 % Define material properties.
@@ -95,14 +95,14 @@ for i = 1:Np
     end
 end
 
+%% Path following.
+%
 % Initialise the internal force vector, the tangent stiffness matrix and
 % th displacement vector with zeros.
 qt = zeros(2*Np, 1);
 kt = zeros(2*Np, 2*Np);
 d = zeros(2*Np, 1);
 
-%% Path following.
-%
 % First prediction for internal force vector and tangent stiffness for zero
 % displacements.
 % Loop through the elements and assemble q and K matrices.
@@ -137,34 +137,33 @@ K_a = [kr, -vload; h_v, 0];
 
 % Initialise an array to store monitor the vertical displacement of the
 % loaded node and the load factor, lambda.
-displacement = zeros(ceil(1/dF), 1);
-la = zeros(ceil(1/dF)+1, 1);
+disp_hist = zeros(ceil(1/d_step), 1);
+lmbd_hist = zeros(ceil(1/d_step), 1);
+la = 0;
+i = 0;
 
 % Path following loop.
-for i = 1:ceil(1/dF);
-    %la(i)=i*dF;
-    %resid=qr-la(i)*vload;
-    %r=norm(resid);
+while la<1;
+    i = i+1;
+
     t = [kr\vload; 1];
     
-    % Predictor.
-    predictor = dF/t(237)*t;
+    % Initial predictor and displacement vector.
+    predictor = d_step/t(237)*t;
     dd = predictor(1:237);
-    
-    % Update displacement
-    d(afg) = d(afg)+dd;
     
     % Initial load prediction.
     dF = predictor(238);
-    la(i+1) = la(i) + dF;
+    la = la + dF;
+    lmbd_hist(i) = la;
+        
+    % Update displacements on the reduced matrix.
+    d(afg) = d(afg)+dd;
     
     % Approximate the target load of the current step.
+    r = 100;
     while r>tol;
-        
-        % Calculate the displacements for active DOFs (reduced matrix).
-        dd = -kr\resid;
-        d(afg) = d(afg)+dd;
-        
+
         % Reset matrices
         kt = zeros(2*Np, 2*Np);
         qt = zeros(2*Np, 1);
@@ -194,16 +193,31 @@ for i = 1:ceil(1/dF);
         qr = qt(afg);
         kr = kt(afg,afg);
         
-        % Recalculate residual.
-        resid=qr-la(i+1)*vload;
-        r=norm(resid);
+        % Update extended tangent stiffness matrix for displacement
+        % control.
+        K_a = [kr, -vload; h_v, 0];
+        
+        % Update residual.
+        resid = qr - la*vload;
+        r = norm(resid);
+                
+        % Update the predictor and displacements.
+        predictor = -K_a\[resid;0];
+        dd = predictor(1:237);
+        d(afg) = d(afg)+dd;
+        
+        % Update load step.
+        dF = predictor(238);
+        la = la + dF;
+        
     end
-    displacement(i) = d(82);
+    disp_hist(i) = d(82);
 end
 
 % Global displacements.
 d(afg) = d(afg)+dd;
 
+%% Post-rocessing
 % Print on screen the requested displacement.
 disp(d(82))
 
@@ -226,5 +240,5 @@ hold off;
 
 % Plot load displacement curve
 figure;
-plot([0; -displacement], - la*load, '-o')
+plot([0, -disp_hist], -[0, lmbd_hist]*load, '-o')
 
