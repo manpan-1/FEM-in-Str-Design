@@ -22,6 +22,9 @@ E  =  210000;
 % Load vector.
 F = [0; -1];
 
+% Number of steps
+steps = 25;
+
 % Initialisation
 d = zeros(2, 1);
 d1 = zeros(4, 1);
@@ -44,9 +47,6 @@ keg = ke1(3:4, 3:4) + ke2(1:2, 1:2);
 %define tangent stiffnes matrix
 Ka = [keg, -F; 0, 1, 0];
 dv2 = -0.01;
-
-% Number of steps
-steps = 25;
 
 for i = 1:25
   %assemble tangent vector

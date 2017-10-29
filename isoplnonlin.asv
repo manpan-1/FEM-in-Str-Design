@@ -1,4 +1,0 @@
-function [q_e, k_e]=isoplnonlin(E, nu, th, x, d)
-% ISOPLNONLIN function
-% The function ISOPLNONLIN returns the internal force vector and tangent
-% stiffness matrix for 0an non-linear 2D planar element.

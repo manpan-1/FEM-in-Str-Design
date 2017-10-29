@@ -11,7 +11,6 @@ load = -150000;
 % 0<step<1
 dF = 0.03;
 
-%% Structure
 % Define material properties.
 E = 1E7;
 nu = 0.25;
@@ -101,9 +100,7 @@ qt = zeros(2*Np, 1);
 kt = zeros(2*Np, 2*Np);
 d = zeros(2*Np, 1);
 
-%% Path following.
-%
-% First prediction for internal force vector and tangent stiffness for zero
+% First prediction: internal force vector and tangent stiffness for zero
 % displacements.
 % Loop through the elements and assemble q and K matrices.
 for i = 1:Ne
@@ -129,34 +126,17 @@ end
 qr = qt(afg);
 kr = kt(afg,afg);
 
-% Auxiliary vector.
-h_v = [zeros(1, 236), 1];
-
-% Extended tangent stiffness matrix for the displacement control.
-K_a = [kr, -vload; h_v, 0];
-
 % Initialise an array to store monitor the vertical displacement of the
 % loaded node and the load factor, lambda.
 displacement = zeros(ceil(1/dF), 1);
-la = zeros(ceil(1/dF)+1, 1);
+la = zeros(ceil(1/dF), 1);
 
 % Path following loop.
 for i = 1:ceil(1/dF);
-    %la(i)=i*dF;
-    %resid=qr-la(i)*vload;
-    %r=norm(resid);
-    t = [kr\vload; 1];
     
-    % Predictor.
-    predictor = dF/t(237)*t;
-    dd = predictor(1:237);
-    
-    % Update displacement
-    d(afg) = d(afg)+dd;
-    
-    % Initial load prediction.
-    dF = predictor(238);
-    la(i+1) = la(i) + dF;
+    la(i)=i*dF;
+    resid=qr-la(i)*vload;
+    r=norm(resid);
     
     % Approximate the target load of the current step.
     while r>tol;
@@ -195,7 +175,7 @@ for i = 1:ceil(1/dF);
         kr = kt(afg,afg);
         
         % Recalculate residual.
-        resid=qr-la(i+1)*vload;
+        resid=qr-la(i)*vload;
         r=norm(resid);
     end
     displacement(i) = d(82);
@@ -226,5 +206,5 @@ hold off;
 
 % Plot load displacement curve
 figure;
-plot([0; -displacement], - la*load, '-o')
+plot([0; -displacement], -[0; la]*load, '-o')
 
