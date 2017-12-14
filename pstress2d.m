@@ -10,10 +10,7 @@ function [sn,epsn,Ct]=pstress2d(so,epso,de)
 
 global E nu H yield
 
-
-Ce=E/(1-nu^2)*[1 nu 0
-               nu 1 0           
-               0 0 (1-nu)/2];
+Ce=E/(1-nu^2)*[1, nu, 0; nu, 1, 0; 0, 0, (1-nu)/2];
 
 sb=so+Ce*de;
 sy=yield+H*epso;

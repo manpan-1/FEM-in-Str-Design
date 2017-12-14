@@ -1,13 +1,26 @@
-function [q_e, k_e] = isoplnonlin(E, nu, th, x, d)
+function [q_e, k_e, so_el, epso_el] = isoplnonlinplast(th, x, d, so_el, epso_el, do)
 % ISOPLNONLIN calculates and returns the internal force vector and tangent
 % stiffness matrix for a non-linear 2D planar element.
+%
+% Input variables
+% th : shell thickness
+% x  : nodal coordinates
+% d  : nodal displacements
+% so_el : previous steps stresses of the element (all Gauss points)
+% epso_el : previous step plastic stress of th element
+% do : previous step nodal displacements
 
-% Calculate differential nodal displacement using the previous step 
+% Get globals
+global E nu
+
+% Calculate diferential strain based on the previous and the current steps'
+% displacement
+dd = d - do;
 
 % Assemble elasticity matrix.
-C_m = E/(1-nu^2)*[1,  nu, 0;
-    nu, 1,  0;
-    0,  0,  (1-nu)/2];
+% C_m = E/(1-nu^2)*[1,  nu, 0;
+%     nu, 1,  0;
+%     0,  0,  (1-nu)/2];
 
 % Matrix addressing the diferential displacements to the 3 strains ?x, ?y,
 % ?xy.
@@ -60,8 +73,25 @@ for i = 1:4
     % strains).
     B_m = (H_m + A_m)*G_m;
     
+    % Calculate differential strains (from diff. displacement from previous
+    % step for plasticity).
+    de = B_m*dd;
+    
+    % Current step strains.
+    e_1 = (H_m + 0.5*A_m)*G_m*d;
+    
+    % Previous step strain
+    e_0 = (H_m + 0.5*A_m)*G_m*do;
+    
+    % The deifferential strain de can be instead calculated as the
+    % difference of the strains, e_0, e_1
+    % de e_1-e_0
+    
+    % Calculate the new stresses using pstress2d function.
+    [S_m, epsn, C_m] = pstress2d(so_el{i},epso_el(i),de);
+    
     % Stress matrix.
-    S_m = C_m*(H_m + 0.5*A_m)*G_m*d;
+    %S_m = C_m*e_1;
     
     % Define D matrix (stresses for tangent stiffness matrix)
     D_mm = [S_m(1), S_m(3); S_m(3), S_m(2)];
@@ -72,6 +102,10 @@ for i = 1:4
     
     % Tangent stiffness matrix.
     k_e = k_e + th*(B_m'*C_m*B_m + G_m'*D_m*G_m);
+    
+    % Replace the so and epso to the newlly calculated
+    so_el{i} = S_m;
+    epso_el(i) = epsn;
     
 end;
 

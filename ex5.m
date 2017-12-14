@@ -1,4 +1,12 @@
-% Exercise 4: Frame solved using corotational elements.
+% Exercise 4: Frame solved using corotational elements with plasticity.
+
+% Set globals
+clear all;
+global wx wy E Et yield H xg yg  
+
+%% weight factors
+wx=[0.5 0.5];       xg=[0.21132 0.78868];
+wy=[0.12948 0.27971 0.38183 0.41796 0.38183 0.27971 0.12948];    yg=[-0.94911 -0.74153 -0.40585 0 0.40585 0.74153 0.94911];
 
 % Initialise variables for the output
 forc = [];
@@ -6,15 +14,20 @@ dispx = [];
 dispy = [];
 
 % Define approximation tolerance for the residual
-tol = 1E-3; 
+tol = 1E-4; 
 
 % Cross-section
-L = 1000;
-a = 20;
-b = 20;
+L = 120;
+a = 3;
+b = 2;
+
+% Material properties
+E = 720;
+Et = E/10;
+yield = 10.44;
+H = Et/(1-Et/E);
 
 % Structural properties
-E = 210000;
 I = a*b^3/12;
 A = a*b;
 EA = E*A;
@@ -78,8 +91,17 @@ nfg = size(afg,1);
 Kg = zeros(3*Np, 3*Np); % size of matrix determined by number of degrees of freedom per node
 qg = zeros(3*Np, 1); % internal force vector
 d = zeros(3*Np, 1); %displacement matrix
+do = d; %previous step displacement (initially zero)
 Pr = d; %full matrix of external forces
 residualg = d; %residual forces global matrix
+
+
+sgo=zeros(7*Ne,2); %stress matrix for gausspoints
+epsgo=zeros(7*Ne,2);
+ego=zeros(7*Ne,2);
+sn=zeros(7,2);
+epsn=zeros(7,2);
+
 
 % initialisation
 for i = 1:Ne  
@@ -88,8 +110,9 @@ for i = 1:Ne
   
   % coordinates matrix
   x = [coor(m1,1:2), coor(m2,1:2)]';
-  v = [3*m1-2:3*m1, 3*m2-2:3*m2]';  
-  [q, K] = corotbeam(EA, EI, x, d(v));
+  v = [3*m1-2:3*m1, 3*m2-2:3*m2]';
+  gp = [7*m1-6:7*m2-7]';
+  [q, K, sn, epsn] = corotbeamplastic ( a, b, x, d(v), sgo(gp,1:2) ,epsgo(gp,1:2), do(v) );
   Kg(v, v) = Kg(v, v) + K;
   
 end
@@ -98,7 +121,7 @@ end
 Kr = Kg(afg, afg);  %initial tangent stiffness matrix.
 
 % displacement increment.
-d_inc = -0.05;
+d_inc = -0.1;
 
 % Auxiliary vector for the displacement control.
 aux = [zeros(17, 1); 1 ; zeros(11, 1)];
@@ -112,29 +135,19 @@ Ka = [Kr, -P; aux', 0];
 la = 0;
 max_idx = 18;
 
-% direction vector
-s = 1;
-
 % perform analysis
 step3 = 0;
 
-while la < 2.0
+while d(19) < 100
     % assemble tangent vector 
     t = [Kr\P; 1];
     
     % predictor
-    if abs(d(20)) < 60 && max_idx ~= 17  
-        max_idx = 18;               
-    elseif d(19) < 93 && step3 == 0
-        max_idx = 17;
-        d_inc = 0.02;
+    %identify maximum displacement: node number and direction
+    if d(19) < 90 && abs(d(20)) > 48
+        max_idx=17;
+        d_inc=0.1;
     end 
-    
-    if abs(d(19)) > 93    
-        max_idx = 21;
-        d_inc = -0.1;
-        step3 = 1;
-    end
     
     % Change displacement control to the node with the highest displacement,
     aux = [zeros(max_idx-1, 1); 1 ; zeros(length(t) - max_idx - 1, 1) ]; 
@@ -162,16 +175,24 @@ while la < 2.0
         %assemble
         Kg = zeros(3*Np, 3*Np);
         qg = zeros(3*Np, 1);
+        sgn=zeros(7*Ne,2);
+        epsgn=zeros(7*Ne,2);
         for i = 1:Ne
             m1 = elem(i, 1);
             m2 = elem(i, 2);
             
             %coordinates matrix
             x = [coor(m1, 1:2), coor(m2, 1:2)]';
-            v = [3*m1 - 2:3*m1, 3*m2 - 2:3*m2]';                   
-            [q, K] = corotbeam(EA, EI, x, d(v));
+            v = [3*m1 - 2:3*m1, 3*m2 - 2:3*m2]';     
+            
+            % Local stiffness, load vector and strains
+            [q, K, sn, epsn] = corotbeamplastic( a, b, x, d(v),sgo(gp,1:2), epsgo(gp,1:2), do(v));
+            
+            % Assemble to global
             Kg(v, v) = Kg(v, v) + K;
             qg(v, 1) = qg(v, 1) + q;
+            sgn(gp,1:2)=sgn(gp,1:2)+sn;
+            epsgn(gp,1:2)=epsgn(gp,1:2)+epsn;
         end
         
         qr = qg(afg, 1);
@@ -188,17 +209,25 @@ while la < 2.0
         end
     end
     
+    % store matrices at the current converged step to use on the next step.
+    do= d;
+    sgo= sgn;
+    epsgo= epsgn;
+    
+    % keep values of force and displacement at the control node for later
+    % plotting.
     forc = [forc, la];
     dispx = [dispx, d(19)];
     dispy = [dispy, d(20)];
 end
+% 
+% P = 1;
+% u = d(19);
+% v = -d(20);
+% 
+% %defbeam(coor, elem, d, 0.1)
+% 
+% figure;
+% plot(dispx, forc, -dispy, forc);
 
-P = 1;
-u = d(19);
-v = -d(20);
-
-%defbeam(coor, elem, d, 0.1)
-
-figure;
-plot(dispx, forc, -dispy, forc);
-
+defbeam(coor,elem,d,1)

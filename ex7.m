@@ -1,5 +1,9 @@
 % Exercise 6: Non-linear analysis of thin ring using Green's strain.
 
+%% Define globals
+% The following globals are used by the pstress2d function
+global E nu H yield
+
 %% Input
 % Define the approximation tolerance.
 tol = 1E-4;
@@ -14,6 +18,9 @@ d_step = -0.5;
 %% Structure
 % Define material properties.
 E = 1E7;
+yield = 2e5;
+E_t = E/10;
+H = E_t/(1-E_t/E);
 nu = 0.25;
 th = 1;
 
@@ -104,6 +111,14 @@ qt = zeros(2*Np, 1);
 kt = zeros(2*Np, 2*Np);
 d = zeros(2*Np, 1);
 
+% Initialise stress and strain state tables and previous step displacements
+%(all zero for the first step).
+sgo = cell(Ne, 1);
+sgn = cell(Ne, 1);
+epsgo = zeros(Ne, 4);
+epsgn = zeros(Ne, 4);
+do = d;
+
 % First prediction for internal force vector and tangent stiffness for zero
 % displacements.
 % Loop through the elements and assemble q and K matrices.
@@ -124,6 +139,10 @@ for i = 1:Ne
     % Add them to the global matrices.
     qt(vu) = qt(vu) + q_e;
     kt(vu,vu) = kt(vu,vu) + k_e;
+    
+    % Fill the sgo and epsgo matrices with zeros (for the initial step)
+    sgo{i} = {zeros(3, 1), zeros(3, 1), zeros(3, 1), zeros(3, 1)};
+    sgn{i} = {zeros(3, 1), zeros(3, 1), zeros(3, 1), zeros(3, 1)};
 end
 
 % Reduced tangent matrices(for the active DOF's).
@@ -183,7 +202,8 @@ while la<1;
             vu = [2*m1-1:2*m1,  2*m2-1:2*m2,  2*m3-1:2*m3,  2*m4-1:2*m4];
             
             % Element internal force and tangent stiffness matrix on the global csys.
-            [q_e, k_e] = isoplnonlin(E, nu, th, xy, d(vu));
+            % The current step sgo and epsgo get updated.
+            [q_e, k_e, sgn{j}, epsgn(j, :)] = isoplnonlinplast(th, xy, d(vu), sgo{j}, epsgo(j, :), do(vu));
             
             % Add them to the global matrices.
             qt(vu) = qt(vu) + q_e;
@@ -213,6 +233,11 @@ while la<1;
         
     end
     disp_hist(i) = d(82);
+    
+    % Update stored converged data (d, sg, eps)for plasticity.
+    do = d;
+    sgo = sgn;
+    epsgo = epsgn;
 end
 
 % Global displacements.

@@ -63,6 +63,7 @@ coor(123,3) = 1;
 coor(123,6) = load;
 
 % Plot the undeformed structure
+figure;
 hold on;
 for i = 1:Ne
     n1 = elem(i,1);
