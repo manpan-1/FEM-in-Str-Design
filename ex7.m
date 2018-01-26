@@ -1,4 +1,4 @@
-% Exercise 6: Non-linear analysis of thin ring using Green's strain.
+% Exercise 6: Non-linear plastic analysis of thin ring using Green's strain.
 
 %% Define globals
 % The following globals are used by the pstress2d function
@@ -9,7 +9,7 @@ global E nu H yield
 tol = 1E-4;
 
 % Load
-load = -150000;
+load = -100000;
 
 % Define step, percentage for the given load.
 % 0<step<1

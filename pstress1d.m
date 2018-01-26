@@ -23,7 +23,7 @@ if abs(sb) <= abs(sy)
     epsn=epso;
     En=E;
 else
-    sn = sb-E/(E+H)*(sb-sign(sb)*sy)+E*de;
+    sn = sb-E/(E+H)*(sb-sign(sb)*sy);
     epsn = epso +(abs(sb)-sy)/(E+H);
     En=Et; 
 end

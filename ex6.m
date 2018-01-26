@@ -17,7 +17,7 @@ E = 1E7;
 nu = 0.25;
 th = 1;
 
-% Radius and XXX of the ring.
+% Radius and thickness of the ring.
 R = 20;
 d = 1/2;
 

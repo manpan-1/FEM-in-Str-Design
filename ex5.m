@@ -28,10 +28,10 @@ yield = 10.44;
 H = Et/(1-Et/E);
 
 % Structural properties
-I = a*b^3/12;
-A = a*b;
-EA = E*A;
-EI = E*I;
+%I = a*b^3/12;
+%A = a*b;
+%EA = E*A;
+%EI = E*I;
 
 % Geometrical parameters of the structure (elements, nodes etc.)
 coor = zeros(11,8);
@@ -47,7 +47,7 @@ coor = [0   0   1     1       0      0      0      0
         0   72  0     0       0      0      0      0
         0   96  0     0       0      0      0      0
         0   120 0     0       0      0      0      0
-        24  120 0     0       0      0     -1e7    0
+        24  120 0     0       0      0     -1      0
         48  120 0     0       0      0      0      0
         72  120 0     0       0      0      0      0
         96  120 0     0       0      0      0      0
@@ -183,7 +183,8 @@ while d(19) < 100
             
             %coordinates matrix
             x = [coor(m1, 1:2), coor(m2, 1:2)]';
-            v = [3*m1 - 2:3*m1, 3*m2 - 2:3*m2]';     
+            v = [3*m1 - 2:3*m1, 3*m2 - 2:3*m2]'; 
+            gp=[7*m1-6:7*m2-7]';
             
             % Local stiffness, load vector and strains
             [q, K, sn, epsn] = corotbeamplastic( a, b, x, d(v),sgo(gp,1:2), epsgo(gp,1:2), do(v));
@@ -197,6 +198,7 @@ while d(19) < 100
         
         qr = qg(afg, 1);
         Kr = Kg(afg, afg);  %converged stiffness matrix
+        Ka=[Kr,-P;aux',0];
         
         residualr = qr - la*P;
         r = norm(residualr);
@@ -220,14 +222,16 @@ while d(19) < 100
     dispx = [dispx, d(19)];
     dispy = [dispy, d(20)];
 end
-% 
-% P = 1;
-% u = d(19);
-% v = -d(20);
-% 
-% %defbeam(coor, elem, d, 0.1)
-% 
-% figure;
-% plot(dispx, forc, -dispy, forc);
 
-defbeam(coor,elem,d,1)
+P = 1;
+u = d(19);
+v = -d(20);
+
+%defbeam(coor, elem, d, 0.1)
+
+figure;
+plot(dispx, forc, -dispy, forc);
+
+figure;
+scale=0.1;
+defbeam(coor,elem,scale*d,1)

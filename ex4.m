@@ -9,12 +9,12 @@ dispy = [];
 tol = 1E-3; 
 
 % Cross-section
-L = 1000;
-a = 20;
-b = 20;
+L = 120;
+a = 2;
+b = 3;
 
 % Structural properties
-E = 210000;
+E = 720;
 I = a*b^3/12;
 A = a*b;
 EA = E*A;
@@ -34,7 +34,7 @@ coor = [0   0   1     1       0      0      0      0
         0   72  0     0       0      0      0      0
         0   96  0     0       0      0      0      0
         0   120 0     0       0      0      0      0
-        24  120 0     0       0      0     -1e7    0
+        24  120 0     0       0      0     -3      0
         48  120 0     0       0      0      0      0
         72  120 0     0       0      0      0      0
         96  120 0     0       0      0      0      0
@@ -197,7 +197,7 @@ P = 1;
 u = d(19);
 v = -d(20);
 
-%defbeam(coor, elem, d, 0.1)
+defbeam(coor, elem, d, 0.1)
 
 figure;
 plot(dispx, forc, -dispy, forc);
